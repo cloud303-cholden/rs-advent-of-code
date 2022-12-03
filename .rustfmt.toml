@@ -1,0 +1,6 @@
+chain_width = 30
+ignore = [
+    "src/bin/download.rs",
+    "src/bin/scaffold.rs",
+    "src/lib.rs",
+]
