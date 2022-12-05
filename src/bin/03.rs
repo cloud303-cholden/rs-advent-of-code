@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -45,8 +46,50 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(total)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u32> {
+    let alphabet: HashMap<char, u32> = (b'a'..=b'z')
+        .chain(b'A'..=b'Z')
+        .map(|c| c as char)
+        .filter(|c| c.is_alphabetic())
+        .enumerate()
+        .map(|(i, c)| (c, (i as u32) + 1))
+        .collect();
+
+    let mut total = 0;
+
+    for chunk in input
+        .lines()
+        .chunks(3)
+        .into_iter()
+    {
+        let sets: Vec<HashSet<char>> = chunk
+            .map(|c| {
+                c.to_string()
+                    .chars()
+                    .collect()
+            })
+            .collect();
+
+        let set1 = &sets[0];
+
+        let duplicate = set1
+            .iter()
+            .find(|k| {
+                sets.iter()
+                    .skip(1)
+                    .all(|s| s.contains(k))
+            })
+            .unwrap();
+
+        let dup_value = alphabet.get(duplicate);
+
+        match dup_value {
+            Some(dup_value) => total += dup_value,
+            _ => continue,
+        }
+    }
+
+    Some(total)
 }
 
 fn main() {
@@ -68,6 +111,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 3);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(70));
     }
 }
