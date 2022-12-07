@@ -18,13 +18,13 @@ pub fn sub_strings(string: String, sub_len: usize) -> Vec<String> {
     subs
 }
 
-pub fn part_one(input: &str) -> Option<String> {
-    // Could definitely have done this one cleaner. But I'm slow enough already!
-
-    let (stack_rows, procedures) = input
+pub fn split_input(input: &str) -> (&str, &str) {
+    input
         .split_once("\n\n")
-        .unwrap();
+        .unwrap()
+}
 
+pub fn parse_stacks(stack_rows: &str) -> Vec<Vec<char>> {
     // Parse stack configuration into rows of items
     let mut stack_rows: Vec<Vec<String>> = stack_rows
         .lines()
@@ -59,17 +59,19 @@ pub fn part_one(input: &str) -> Option<String> {
     }
 
     // Filter out `' '` from stacks.
-    stacks = stacks
+    stacks
         .into_iter()
         .map(|v| {
             v.into_iter()
                 .filter(|c| c != &' ')
                 .collect()
         })
-        .collect();
+        .collect()
+}
 
+pub fn parse_procedures(procedures: &str) -> Vec<(usize, usize, usize)> {
     // Build procedures
-    let procedures: Vec<(usize, usize, usize)> = procedures
+    procedures
         .lines()
         .map(|l| {
             l.to_string()
@@ -78,7 +80,28 @@ pub fn part_one(input: &str) -> Option<String> {
                 .collect_tuple::<(usize, usize, usize)>()
                 .unwrap()
         })
-        .collect();
+        .collect()
+}
+
+pub fn read_top_items(stacks: Vec<Vec<char>>) -> String {
+    // Extract the top item from each stack into a `String`
+    stacks
+        .into_iter()
+        .map(|stack| match stack.last() {
+            Some(c) => c.to_string(),
+            None => "".to_owned(),
+        })
+        .into_iter()
+        .collect()
+}
+
+pub fn part_one(input: &str) -> Option<String> {
+    // Could definitely have done this one cleaner. But I'm slow enough already!
+    let (stack_rows, procedures) = split_input(input);
+
+    let mut stacks = parse_stacks(stack_rows);
+
+    let procedures = parse_procedures(procedures);
 
     // Apply procedures
     for p in procedures {
@@ -88,21 +111,30 @@ pub fn part_one(input: &str) -> Option<String> {
         }
     }
 
-    // Extract the top item from each stack into a `String`
-    let top_items: String = stacks
-        .into_iter()
-        .map(|stack| match stack.last() {
-            Some(c) => c.to_string(),
-            None => "".to_owned(),
-        })
-        .into_iter()
-        .collect();
-
+    let top_items = read_top_items(stacks);
     Some(top_items)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<String> {
+    let (stack_rows, procedures) = split_input(input);
+
+    let mut stacks = parse_stacks(stack_rows);
+
+    let procedures = parse_procedures(procedures);
+
+    // Apply procedures
+    for p in procedures {
+        let source_stack = &mut stacks[p.1 - 1];
+        let mut items = source_stack.split_off(
+            source_stack
+                .len()
+                .saturating_sub(p.0),
+        );
+        stacks[p.2 - 1].append(&mut items);
+    }
+
+    let top_items = read_top_items(stacks);
+    Some(top_items)
 }
 
 fn main() {
@@ -124,6 +156,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 5);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some("MCD".to_string()));
     }
 }
