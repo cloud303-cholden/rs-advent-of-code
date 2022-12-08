@@ -1,18 +1,18 @@
 use itertools::Itertools;
 
-pub fn part_one(input: &str) -> Option<usize> {
-    let packet_length = input.len();
+pub fn find_marker_idx(packet: &str, unique_characters: usize) -> Option<usize> {
+    let packet_length = packet.len();
 
     let mut marker_idx: Option<usize> = None;
     for i in 0..packet_length {
-        let marker_start = i.saturating_sub(3);
-        let marker = &input[marker_start..=i];
+        let marker_start = i.saturating_sub(unique_characters - 1);
+        let marker = &packet[marker_start..=i];
         let uniques = marker
             .to_string()
             .chars()
             .unique()
             .collect::<Vec<_>>();
-        if uniques.len() != 4 {
+        if uniques.len() != unique_characters {
             continue;
         }
         marker_idx = Some(i + 1);
@@ -21,8 +21,12 @@ pub fn part_one(input: &str) -> Option<usize> {
     marker_idx
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_one(input: &str) -> Option<usize> {
+    find_marker_idx(input, 4)
+}
+
+pub fn part_two(input: &str) -> Option<usize> {
+    find_marker_idx(input, 14)
 }
 
 fn main() {
@@ -44,6 +48,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 6);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(19));
     }
 }
