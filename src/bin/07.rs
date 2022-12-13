@@ -1,6 +1,7 @@
+use itertools::Itertools;
 use std::collections::HashMap;
 
-pub fn part_one(input: &str) -> Option<u64> {
+pub fn build_filesystem(input: &str) -> HashMap<String, u64> {
     let mut fs: HashMap<String, u64> = HashMap::new();
     let root_dir = String::from("/");
     let mut current_dir: String = root_dir.clone();
@@ -59,6 +60,11 @@ pub fn part_one(input: &str) -> Option<u64> {
             _ => continue,
         }
     }
+    fs
+}
+
+pub fn part_one(input: &str) -> Option<u64> {
+    let mut fs = build_filesystem(input);
 
     fs.retain(|_, v| v <= &mut 100000);
 
@@ -66,8 +72,18 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(total)
 }
 
-pub fn part_two(_input: &str) -> Option<u64> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let mut fs = build_filesystem(input);
+    let total_size = fs.get("/").unwrap();
+    let mut amount_to_delete: u64 = 30_000_000 - (70_000_000 - total_size);
+
+    fs.retain(|_, v| v >= &mut amount_to_delete);
+    let amount_deleted: u64 = *fs
+        .values()
+        .sorted()
+        .next()
+        .unwrap();
+    Some(amount_deleted)
 }
 
 fn main() {
@@ -83,12 +99,12 @@ mod tests {
     #[test]
     fn test_part_one() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_one(&input), Some(95437));
+        assert_eq!(part_one(&input), Some(95_437));
     }
 
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(24_933_642));
     }
 }
