@@ -7,12 +7,13 @@ pub fn find_marker_idx(packet: &str, unique_characters: usize) -> Option<usize> 
     for i in 0..packet_length {
         let marker_start = i.saturating_sub(unique_characters - 1);
         let marker = &packet[marker_start..=i];
-        let uniques = marker
+        if marker
             .to_string()
             .chars()
             .unique()
-            .collect::<Vec<_>>();
-        if uniques.len() != unique_characters {
+            .count()
+            != unique_characters
+        {
             continue;
         }
         marker_idx = Some(i + 1);
