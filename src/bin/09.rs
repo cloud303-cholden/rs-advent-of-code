@@ -136,7 +136,7 @@ impl Rope for Vec<Point> {
     fn update_point(&mut self, idx: usize) {
         let mut point = self[idx];
         let parent_point = self[idx - 1];
-        println!("Check:  {:?} ({})", point, idx);
+        println!("Check:  {point:?} ({idx})");
 
         if !point.is_touching(&parent_point) {
             let motions = &parent_point.compute_tail_motion(point);
@@ -147,10 +147,7 @@ impl Rope for Vec<Point> {
                 point = motion.create_point(point);
             }
             self[idx] = point;
-            println!(
-                "Update: {:?} ({}) with {:?} toward {:?}",
-                point, idx, motions, parent_point
-            );
+            println!("Update: {point:?} ({idx}) with {motions:?} toward {parent_point:?}");
         }
     }
 }
@@ -167,7 +164,7 @@ pub fn part_two(input: &str) -> Option<usize> {
     unique_points.insert(rope[rope_length - 1]);
 
     for (idx, motion) in motions.iter().enumerate() {
-        println!("Motion: {:?} ({})", motion, idx);
+        println!("Motion: {motion:?} ({idx})");
         for _step in 0..motion.distance {
             rope[0] = motion.create_point(rope[0]);
             println!("Head:   {:?}", rope[0]);
