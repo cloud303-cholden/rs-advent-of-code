@@ -37,8 +37,68 @@ pub fn part_one(input: &str) -> Option<i32> {
     Some(signal_strength)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<String> {
+    let mut instructions: Vec<(i32, i32)> = input
+        .lines()
+        .flat_map(|l| match l {
+            "noop" => vec![0_i32],
+            _ => vec![
+                0,
+                l.split_once(' ')
+                    .unwrap()
+                    .1
+                    .parse::<i32>()
+                    .unwrap(),
+            ],
+        })
+        .map(|e| (e, 0_i32))
+        .collect();
+
+    let mut total_signal: i32 = 1;
+    for i in instructions.iter_mut() {
+        total_signal += i.0;
+        i.1 = total_signal
+    }
+
+    instructions.insert(0, (0, 1));
+    let mut crt = String::new();
+    instructions
+        .iter()
+        .enumerate()
+        .for_each(|(cycle, (_instruction, register))| {
+            match (cycle as i32)
+                .rem_euclid(40)
+                .saturating_sub(*register)
+                .abs()
+                .cmp(&1)
+            {
+                std::cmp::Ordering::Greater => {
+                    println!(". {cycle}, {register}");
+                    crt.push('.')
+                }
+                _ => {
+                    println!("# {cycle}, {register}");
+                    crt.push('#')
+                }
+            }
+        });
+
+    crt = crt
+        .chars()
+        .enumerate()
+        .flat_map(|(i, c)| {
+            if i != 0 && (i as i32).rem_euclid(40) == 0 {
+                Some('\n')
+            } else {
+                None
+            }
+            .into_iter()
+            .chain(std::iter::once(c))
+        })
+        .collect::<String>();
+    crt.pop();
+
+    Some(crt)
 }
 
 fn main() {
@@ -60,6 +120,16 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 10);
-        assert_eq!(part_two(&input), None);
+        let output = "##..##..##..##..##..##..##..##..##..##..\n\
+            ###...###...###...###...###...###...###.\n\
+            ####....####....####....####....####....\n\
+            #####.....#####.....#####.....#####.....\n\
+            ######......######......######......####\n\
+            #######.......#######.......#######.....\n"
+            .to_string();
+        let lhs = part_two(&input).unwrap();
+        println!("{lhs}");
+        println!("{output}");
+        assert_eq!(Some(lhs), Some(output));
     }
 }
