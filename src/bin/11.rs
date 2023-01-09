@@ -1,14 +1,15 @@
 #![feature(int_roundings)]
 
+use itertools::Itertools;
 use std::collections::VecDeque;
 use std::iter::IntoIterator;
 
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct Monkey<'a> {
-    items: VecDeque<u32>,
+    items: VecDeque<u64>,
     operation: (&'a str, &'a str),
-    test: u32,
+    test: u64,
     test_true: usize,
     test_false: usize,
 }
@@ -31,7 +32,7 @@ impl<'a> FromIterator<&'a str> for Monkey<'a> {
                 .split(", ")
                 .into_iter()
                 .map(|c| c.parse().unwrap())
-                .collect::<VecDeque<u32>>(),
+                .collect::<VecDeque<u64>>(),
             operation: lines
                 .next()
                 .unwrap()
@@ -64,9 +65,7 @@ impl<'a> FromIterator<&'a str> for Monkey<'a> {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
-    let rounds = 20;
-
+pub fn compute_monkey_business(rounds: u32, input: &str, reduce_worry: bool) -> Option<u64> {
     let mut monkeys: Vec<Monkey> = input
         .split("\n\n")
         .into_iter()
@@ -74,9 +73,17 @@ pub fn part_one(input: &str) -> Option<u32> {
         .collect();
     println!("{monkeys:?}");
 
-    let mut queue: Vec<VecDeque<u32>> = vec![VecDeque::new(); monkeys.len()];
+    // Had to look up the math for this part. Essentially boils down to using a common denominator
+    // for operations that would otherwise yield numbers that are too big.
+    let common_denominator: u64 = monkeys
+        .iter()
+        .map(|m| m.test)
+        .unique()
+        .product();
 
-    let mut inspections = vec![0u32; monkeys.len()];
+    let mut queue: Vec<VecDeque<u64>> = vec![VecDeque::new(); monkeys.len()];
+
+    let mut inspections = vec![0u64; monkeys.len()];
 
     (0..rounds).for_each(|round| {
         monkeys
@@ -106,7 +113,7 @@ pub fn part_one(input: &str) -> Option<u32> {
                             item += monkey
                                 .operation
                                 .1
-                                .parse::<u32>()
+                                .parse::<u64>()
                                 .unwrap()
                         }
                         "*" if monkey.operation.1 == "old" => item *= item,
@@ -114,13 +121,17 @@ pub fn part_one(input: &str) -> Option<u32> {
                             item *= monkey
                                 .operation
                                 .1
-                                .parse::<u32>()
+                                .parse::<u64>()
                                 .unwrap()
                         }
                         _ => (),
                     }
 
-                    item = item.div_floor(3);
+                    if reduce_worry {
+                        item = item.div_floor(3);
+                    } else {
+                        item %= common_denominator;
+                    }
 
                     match item % monkey.test == 0 {
                         true => queue[monkey.test_true].push_back(item),
@@ -138,7 +149,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     inspections.sort();
 
-    let monkey_business: u32 = inspections
+    let monkey_business: u64 = inspections
         .iter()
         .rev()
         .take(2)
@@ -147,8 +158,13 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(monkey_business)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_one(input: &str) -> Option<u64> {
+    compute_monkey_business(20, input, true)
+}
+
+pub fn part_two(input: &str) -> Option<u64> {
+    // Performance on this is terrible. Will analyze other solutions to learn from this puzzle.
+    compute_monkey_business(10_000, input, false)
 }
 
 fn main() {
@@ -170,6 +186,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 11);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(2713310158));
     }
 }
